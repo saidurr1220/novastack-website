@@ -7,12 +7,15 @@ const Contact = () => {
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState({});
     const [submitted, setSubmitted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [serverError, setServerError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
         setErrors((prev) => ({ ...prev, [name]: "" }));
+        setServerError("");
+        setSubmitted(false);
     };
 
     const validate = () => {
@@ -29,16 +32,18 @@ const Contact = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setServerError("");
+        setSubmitted(false);
+
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
-        setIsSubmitting(true);
-        setErrors({});
-
         try {
+            setLoading(true);
+
             const response = await fetch("/api/contact", {
                 method: "POST",
                 headers: {
@@ -47,20 +52,36 @@ const Contact = () => {
                 body: JSON.stringify(form),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.error || "Failed to send message");
+                // In development, if API route doesn't exist, simulate success
+                if (import.meta.env.DEV && response.status === 404) {
+                    console.log("Development mode: Form data", form);
+                    setSubmitted(true);
+                    setForm(initialForm);
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+                setServerError(
+                    data?.error || "Failed to send message. Please try again."
+                );
+                return;
             }
 
             setSubmitted(true);
             setForm(initialForm);
-        } catch (error) {
-            setErrors({
-                submit: error.message || "Failed to send message. Please try again.",
-            });
+        } catch (err) {
+            console.error(err);
+            // In development mode, simulate success if network error
+            if (import.meta.env.DEV) {
+                console.log("Development mode: Form data", form);
+                setSubmitted(true);
+                setForm(initialForm);
+            } else {
+                setServerError("Network error. Please try again.");
+            }
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
     };
 
@@ -123,17 +144,17 @@ const Contact = () => {
                                 )}
                             </div>
 
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? "Sending..." : "Send message"}
-                            </Button>
-
-                            {errors.submit && (
-                                <p className="field__error">{errors.submit}</p>
+                            {serverError && (
+                                <p className="field__error">{serverError}</p>
                             )}
+
+                            <Button type="submit">
+                                {loading ? "Sending..." : "Send message"}
+                            </Button>
 
                             {submitted && (
                                 <p className="form__success">
-                                    Thanks for reaching out! We've received your message
+                                    Thanks for reaching out! We’ve received your message
                                     and will get back to you shortly.
                                 </p>
                             )}
@@ -144,8 +165,8 @@ const Contact = () => {
                             <ul>
                                 <li>
                                     Email:{" "}
-                                    <a href="saidurr1256@gmail.com">
-                                        saidurr1256@gmail.com
+                                    <a href="mailto:hello@novastack.tech">
+                                        hello@novastack.tech
                                     </a>
                                 </li>
                                 <li>
@@ -155,7 +176,7 @@ const Contact = () => {
                                 <li>
                                     LinkedIn:{" "}
                                     <a href="#">
-                                        https://www.linkedin.com/in/rahmansaidur/
+                                        linkedin.com/company/novastack
                                     </a>
                                 </li>
                             </ul>
