@@ -1,8 +1,8 @@
-const Resend = require("resend").Resend;
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Method not allowed" });
@@ -58,4 +58,4 @@ module.exports = async (req, res) => {
       .status(500)
       .json({ error: "Unexpected server error. Please try again later." });
   }
-};
+}
