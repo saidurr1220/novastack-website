@@ -7,6 +7,7 @@ const Contact = () => {
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState({});
     const [submitted, setSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,7 +27,7 @@ const Contact = () => {
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -34,9 +35,33 @@ const Contact = () => {
             return;
         }
 
-        // Fake submit
-        setSubmitted(true);
-        setForm(initialForm);
+        setIsSubmitting(true);
+        setErrors({});
+
+        try {
+            const response = await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(form),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to send message");
+            }
+
+            setSubmitted(true);
+            setForm(initialForm);
+        } catch (error) {
+            setErrors({
+                submit: error.message || "Failed to send message. Please try again.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -98,11 +123,17 @@ const Contact = () => {
                                 )}
                             </div>
 
-                            <Button type="submit">Send message</Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? "Sending..." : "Send message"}
+                            </Button>
+
+                            {errors.submit && (
+                                <p className="field__error">{errors.submit}</p>
+                            )}
 
                             {submitted && (
                                 <p className="form__success">
-                                    Thanks for reaching out! We’ve received your message
+                                    Thanks for reaching out! We've received your message
                                     and will get back to you shortly.
                                 </p>
                             )}
