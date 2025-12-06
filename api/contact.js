@@ -17,41 +17,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const toAddress = "saidurr1256@gmail.com"; 
+    const toAddress = "saidurr1256@gmail.com";
 
-    // 1) Owner ke email
-    const { error: ownerError } = await resend.emails.send({
+    // Send email to owner
+    const { data, error } = await resend.emails.send({
       from: "NovaStack Contact <onboarding@resend.dev>",
       to: [toAddress],
       subject: `New contact from ${name}`,
-      reply_to: email,
-      text: `From: ${name} <${email}>\n\n${message}`,
+      replyTo: email,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>From:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+        <hr>
+        <p><em>Reply directly to this email to respond to ${name}</em></p>
+      `,
+      text: `New Contact Form Submission\n\nFrom: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     });
 
-    if (ownerError) {
-      console.error("Resend owner email error:", ownerError);
+    if (error) {
+      console.error("Resend error:", error);
       return res
         .status(500)
         .json({ error: "Failed to send email. Please try again later." });
     }
 
-    // 2) confirmation email to sender
-    const { error: userError } = await resend.emails.send({
-      from: "NovaStack Contact <onboarding@resend.dev>",
-      to: [email],
-      subject: "Thanks for reaching out to NovaStack",
-      text:
-        `Hi ${name},\n\n` +
-        "Thanks for reaching out to NovaStack Technologies. We’ve received your message and will get back to you shortly.\n\n" +
-        "If this was a test message, you can confirm the form is working by seeing this email and the email received in the NovaStack inbox.\n\n" +
-        "Best,\nNovaStack Technologies",
-    });
-
-    if (userError) {
-      console.error("Resend user email error:", userError);
-    }
-
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, id: data?.id });
   } catch (err) {
     console.error("Server error:", err);
     return res
