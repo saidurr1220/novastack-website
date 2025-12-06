@@ -103,7 +103,7 @@ Live site: navigate Home → About → Contact and submit the form
 
 Recording link (to be added later):
 
-Screen recording: https://www.loom.com/share/c5923aa1a43f4a24a13ba4d2a187da4d?t=12
+Screen recording: https://www.loom.com/share/6d0fd11ff267440b8337206b6e57234d?t=7
 
 Design Rationale
 I chose a clean, grid-based layout with a dark, slightly glassy theme to keep the three pages visually consistent and focused on content. Reusable components (layout, section headings, cards, form fields) keep the codebase small and easy to maintain while satisfying the assignment’s structure. The spacing and typography are tuned for readability first, with clear primary CTAs on every page. The layout is built mobile-first and then extended with simple breakpoints so it behaves well from small screens up to large desktops. The contact form is wired to a serverless email endpoint to feel like a real production-ready workflow instead of just a fake success state.
